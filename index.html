@@ -71,45 +71,36 @@
     </model-viewer>
 
     <script>
-        // 1. กำหนดพิกัดสถานที่เป้าหมาย (Latitude, Longitude)
-        const targetLat = 12.6529929; // เปลี่ยนเป็นพิกัดสถานที่ของคุณ
-        const targetLng = 99.8646328; // เปลี่ยนเป็นพิกัดสถานที่ของคุณ
-        const maxDistance = 500; // กำหนดรัศมีที่อนุญาตให้เล่นได้ (หน่วย: เมตร)
-
+        // อ้างอิง element เดิม
         const messageEl = document.getElementById('message');
         const arBtn = document.getElementById('ar-btn');
 
-        // 2. ฟังก์ชันคำนวณระยะทางระหว่างจุด 2 จุด (Haversine formula)
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; // รัศมีโลก (เมตร)
-            const φ1 = lat1 * Math.PI / 180;
-            const φ2 = lat2 * Math.PI / 180;
-            const Δφ = (lat2 - lat1) * Math.PI / 180;
-            const Δλ = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c; // คืนค่าเป็นเมตร
+        // 📍 ฟังก์ชันเช็คว่าอยู่ในประเทศไทยไหม
+        function isInThailand(lat, lng) {
+            return lat >= 5.5 && lat <= 20.5 &&
+                lng >= 97.0 && lng <= 105.5;
         }
 
-        // 3. เริ่มขอตำแหน่งผู้ใช้
+        // เริ่มเช็คตำแหน่ง
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
+
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
 
-                const distance = calculateDistance(userLat, userLng, targetLat, targetLng);
-
-                if (distance <= maxDistance) {
-                    messageEl.innerHTML = `✅ คุณอยู่ในพื้นที่แล้ว!<br>(ห่างจากจุดเป้าหมาย ${Math.round(distance)} เมตร)`;
-                    arBtn.style.display = 'block'; // แสดงปุ่ม AR
+                if (isInThailand(userLat, userLng)) {
+                    messageEl.innerHTML = `✅ คุณอยู่ในประเทศไทย<br>สามารถใช้งาน AR ได้`;
+                    arBtn.style.display = 'block';
                 } else {
-                    messageEl.innerHTML = `❌ คุณอยู่ไกลเกินไป<br>กรุณาเดินไปที่จุดเป้าหมาย<br>(ระยะทางปัจจุบัน ${Math.round(distance)} เมตร)`;
+                    messageEl.innerHTML = `❌ ระบบนี้ใช้ได้เฉพาะในประเทศไทย`;
+                    arBtn.style.display = 'none';
                 }
+
             }, (error) => {
-                messageEl.innerHTML = "⚠️ กรุณาอนุญาตให้เว็บไซต์เข้าถึงตำแหน่ง GPS ของคุณ";
+                messageEl.innerHTML = "⚠️ กรุณาอนุญาตให้เข้าถึง GPS";
             });
         } else {
-            messageEl.innerHTML = "เบราว์เซอร์ของคุณไม่รองรับ GPS";
+            messageEl.innerHTML = "❌ อุปกรณ์ไม่รองรับ GPS";
         }
 
         // 4. ฟังก์ชันสำหรับเปิด AR
