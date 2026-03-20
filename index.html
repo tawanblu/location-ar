@@ -57,9 +57,40 @@
     <h1>Location Based AR</h1>
     <p>เดินเข้าใกล้จุดที่กำหนดเพื่อเปิด AR</p>
     <div id="distance">กำลังตรวจสอบตำแหน่ง...</div>
-    <div id="arButtonContainer"> <a id="arLink" href="#" class="ar-btn"> <i class="fa-solid fa-cube"></i> รับชม AR </a>
+    <div id="arButtonContainer"> 
+        <a id="arLink" href="#" class="ar-btn"> 
+            <i class="fa-solid fa-cube"></i> รับชม AR 
+        </a>
     </div>
-    <script> // กำหนดตำแหน่งเป้าหมาย const targetLat = 12.659111; const targetLng = 99.864299; // รัศมี (เมตร) const radius = 99999999; // เปลี่ยนเป็น 500 หรือตัวเลขที่ต้องการเมื่อใช้งานจริง const distanceText = document.getElementById("distance"); const arButtonContainer = document.getElementById("arButtonContainer"); const arLink = document.getElementById("arLink"); // --- ตั้งค่าลิงก์โมเดล (ดึงโมเดล Astronaut มาเป็นตัวอย่าง) --- // โมเดลสำหรับ iOS (.usdz) ต้องใช้ URL เต็มๆ ที่มี https:// const iosModelUrl = "https://modelviewer.dev/shared-assets/models/Astronaut.usdz"; // โมเดลสำหรับ Android (.glb) ไม่ต้องใส่ https:// ไว้ข้างหน้า (เพราะจะถูกครอบด้วย Intent) const androidModelDomainAndPath = "modelviewer.dev/shared-assets/models/Astronaut.glb"; // -------------------------------------------------------- // ตรวจสอบระบบปฏิบัติการ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; const isAndroid = /Android/.test(navigator.userAgent); // จัดเตรียมลิงก์ตาม OS if (isIOS) { arLink.href = iosModelUrl; arLink.setAttribute("rel", "ar"); // จำเป็นสำหรับ iOS } else if (isAndroid) { // โครงสร้าง Intent URL พิเศษสำหรับ Android ARCore arLink.href = intent://${androidModelDomainAndPath}#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=https://developers.google.com/ar;end;; arLink.removeAttribute("rel"); } else { // หากเปิดบน PC arLink.href = "#"; arLink.onclick = function (e) { e.preventDefault(); alert("ระบบ AR รองรับเฉพาะบนสมาร์ทโฟน (iOS และ Android) เท่านั้นครับ"); }; } // คำนวณระยะทาง function getDistance(lat1, lon1, lat2, lon2) { const R = 6371e3; const φ1 = lat1 * Math.PI / 180; const φ2 = lat2 * Math.PI / 180; const Δφ = (lat2 - lat1) * Math.PI / 180; const Δλ = (lon2 - lon1) * Math.PI / 180; const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2); const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); return R * c; } // ตรวจสอบตำแหน่ง function checkLocation(position) { const userLat = position.coords.latitude; const userLng = position.coords.longitude; const distance = getDistance(userLat, userLng, targetLat, targetLng); distanceText.innerHTML = "คุณอยู่ห่างจากจุด AR ประมาณ " + distance.toFixed(2) + " เมตร"; // แสดงหรือซ่อนปุ่มตามระยะทาง if (distance <= radius) { arButtonContainer.style.display = "block"; } else { arButtonContainer.style.display = "none"; } } function error() { distanceText.innerHTML = "ไม่สามารถเข้าถึงตำแหน่งได้ กรุณาอนุญาตให้ใช้งาน GPS"; } // เริ่มต้นจับพิกัด if (navigator.geolocation) { navigator.geolocation.watchPosition(checkLocation, error); } else { distanceText.innerHTML = "อุปกรณ์ของคุณไม่รองรับ GPS"; } </script>
-</body>
 
-</html>
+    <script> 
+        // กำหนดตำแหน่งเป้าหมาย 
+        const targetLat = 12.659111; 
+        const targetLng = 99.864299; 
+        
+        // รัศมี (เมตร) 
+        const radius = 99999999; // เปลี่ยนเป็น 500 หรือตัวเลขที่ต้องการเมื่อใช้งานจริง 
+        
+        const distanceText = document.getElementById("distance"); 
+        const arButtonContainer = document.getElementById("arButtonContainer"); 
+        const arLink = document.getElementById("arLink"); 
+        
+        // --- ตั้งค่าลิงก์โมเดล (ดึงโมเดล Astronaut มาเป็นตัวอย่าง) --- 
+        // โมเดลสำหรับ iOS (.usdz) ต้องใช้ URL เต็มๆ ที่มี https:// 
+        const iosModelUrl = "https://modelviewer.dev/shared-assets/models/Astronaut.usdz"; 
+        
+        // โมเดลสำหรับ Android (.glb) ไม่ต้องใส่ https:// ไว้ข้างหน้า (เพราะจะถูกครอบด้วย Intent) 
+        const androidModelDomainAndPath = "modelviewer.dev/shared-assets/models/Astronaut.glb"; 
+        // -------------------------------------------------------- 
+        
+        // ตรวจสอบระบบปฏิบัติการ 
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; 
+        const isAndroid = /Android/.test(navigator.userAgent); 
+        
+        // จัดเตรียมลิงก์ตาม OS 
+        if (isIOS) { 
+            arLink.href = iosModelUrl; 
+            arLink.setAttribute("rel", "ar"); // จำเป็นสำหรับ iOS 
+        } else if (isAndroid) { 
+            // โครงสร้าง Intent URL พิเศษสำหรับ Android ARCore 
+            arLink.href = `intent://${androidModelDomainAndPath}#Intent;scheme=https;package=com.google.ar.core;action=android.intent
