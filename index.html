@@ -10,9 +10,9 @@
 
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
             margin: 0;
             height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #1e3c72, #2a5298);
             display: flex;
             justify-content: center;
@@ -21,12 +21,12 @@
         }
 
         .card {
+            width: 90%;
+            max-width: 380px;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(15px);
             border-radius: 20px;
             padding: 30px 20px;
-            width: 90%;
-            max-width: 380px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
@@ -41,15 +41,9 @@
             opacity: 0.8;
         }
 
-        #distance {
+        #status {
             margin-top: 15px;
             font-size: 16px;
-        }
-
-        .status {
-            margin-top: 10px;
-            font-size: 14px;
-            opacity: 0.9;
         }
 
         #arButtonContainer {
@@ -60,24 +54,18 @@
         .ar-btn {
             display: inline-block;
             padding: 14px 25px;
-            background: #00c6ff;
             background: linear-gradient(45deg, #00c6ff, #0072ff);
             color: white;
             font-size: 16px;
             border-radius: 50px;
-            text-decoration: none;
-            transition: 0.3s;
             border: none;
             cursor: pointer;
             box-shadow: 0 5px 15px rgba(0, 114, 255, 0.4);
+            transition: 0.3s;
         }
 
         .ar-btn:hover {
             transform: scale(1.05);
-        }
-
-        .ar-btn i {
-            margin-right: 8px;
         }
 
         .pulse {
@@ -113,58 +101,46 @@
 
     <div class="card">
         <h1><i class="fa-solid fa-location-dot"></i> AR Experience</h1>
-        <p>เดินเข้าใกล้จุดเพื่อปลดล็อก AR</p>
+        <p>กดปุ่มเพื่อเปิด AR ได้ทันที</p>
 
-        <div id="distance">กำลังตรวจสอบตำแหน่ง...</div>
-        <div class="status" id="statusText">กำลังค้นหา GPS...</div>
+        <div id="status">กำลังตรวจสอบ GPS...</div>
 
         <div class="pulse"></div>
 
         <div id="arButtonContainer">
-            <a id="arLink" href="#" class="ar-btn">
+            <button id="arBtn" class="ar-btn">
                 <i class="fa-solid fa-cube"></i> เปิด AR
-            </a>
+            </button>
         </div>
     </div>
 
     <script>
-        // 📍 เปลี่ยนเป็นใช้ได้ทั้งประเทศไทย
-        function isInThailand(lat, lng) {
-            return lat >= 5.5 && lat <= 20.5 &&
-                lng >= 97.0 && lng <= 105.5;
-        }
-
-        const distanceText = document.getElementById("distance");
-        const statusText = document.getElementById("statusText");
+        const statusText = document.getElementById("status");
         const arButtonContainer = document.getElementById("arButtonContainer");
-        const arLink = document.getElementById("arLink");
+        const arBtn = document.getElementById("arBtn");
 
-        // 🔗 AR Model
+        // 🔗 โมเดล (เปลี่ยนเป็นของคุณได้)
         const iosModelUrl = "https://modelviewer.dev/shared-assets/models/Astronaut.usdz";
-        const androidModelDomainAndPath = "modelviewer.dev/shared-assets/models/Astronaut.glb";
+        const androidModelUrl = "https://modelviewer.dev/shared-assets/models/Astronaut.glb";
 
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         const isAndroid = /Android/.test(navigator.userAgent);
 
-        if (isIOS) {
-            arLink.href = iosModelUrl;
-            arLink.setAttribute("rel", "ar");
-        } else if (isAndroid) {
-            arLink.href = `intent://${androidModelDomainAndPath}#Intent;scheme=https;package=com.google.ar.core;end;`;
+        // 📍 เช็คว่าอยู่ในประเทศไทย
+        function isInThailand(lat, lng) {
+            return lat >= 5.5 && lat <= 20.5 &&
+                   lng >= 97.0 && lng <= 105.5;
         }
 
         function checkLocation(position) {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
 
-            distanceText.innerHTML = `📍 Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
-
             if (isInThailand(lat, lng)) {
                 statusText.innerHTML = "✅ คุณอยู่ในประเทศไทย";
                 arButtonContainer.style.display = "block";
             } else {
                 statusText.innerHTML = "❌ ใช้งานได้เฉพาะในประเทศไทย";
-                arButtonContainer.style.display = "none";
             }
         }
 
@@ -173,10 +149,29 @@
         }
 
         if (navigator.geolocation) {
-            navigator.geolocation.watchPosition(checkLocation, error);
+            navigator.geolocation.getCurrentPosition(checkLocation, error);
         } else {
             statusText.innerHTML = "❌ อุปกรณ์ไม่รองรับ GPS";
         }
+
+        // 🚀 กดแล้วเข้า AR ทันที
+        arBtn.addEventListener("click", function () {
+
+            if (isIOS) {
+                const a = document.createElement("a");
+                a.setAttribute("rel", "ar");
+                a.setAttribute("href", iosModelUrl);
+                a.click();
+
+            } else if (isAndroid) {
+                const intent = `intent://arvr.google.com/scene-viewer/1.0?file=${androidModelUrl}&mode=ar_only#Intent;scheme=https;package=com.google.ar.core;end;`;
+                window.location.href = intent;
+
+            } else {
+                alert("ใช้ได้เฉพาะมือถือเท่านั้น");
+            }
+
+        });
     </script>
 
 </body>
