@@ -4,10 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Geofence + Tap to Place</title>
-
+    <title>AR Geofence - Fixed</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-
     <style>
         body {
             margin: 0;
@@ -34,82 +32,89 @@
             background: #007bff;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-radius: 5px;
             font-size: 16px;
             margin-top: 15px;
             cursor: pointer;
             display: none;
             width: 100%;
+            font-weight: bold;
         }
 
-        .btn:active {
-            background: #0056b3;
-        }
-
-        /* ซ่อนตัว model-viewer ไว้ก่อน จนกว่าจะกดปุ่ม AR */
         model-viewer {
-            width: 100%;
-            height: 400px;
             display: none;
         }
+
+        /* ซ่อนตัว viewer หลักไว้ ใช้แค่เปิด AR */
     </style>
 </head>
 
 <body>
 
     <div id="status-box">
-        <h3>📍 ตรวจสอบตำแหน่งของคุณ</h3>
+        <h3>📍 ตรวจสอบตำแหน่ง</h3>
         <p id="message">กำลังค้นหาตำแหน่ง GPS...</p>
-
-        <button id="ar-btn" class="btn" onclick="openAR()">กดเพื่อวางโมเดล AR</button>
+        <button id="ar-btn" class="btn" onclick="openAR()">✅ วางโมเดล AR</button>
     </div>
 
     <model-viewer id="my-model" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
         ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz" ar
-        ar-modes="webxr scene-viewer quick-look" camera-controls autoplay shadow-intensity="1">
+        ar-modes="webxr scene-viewer quick-look" camera-controls>
     </model-viewer>
 
     <script>
-        // อ้างอิง element เดิม
         const messageEl = document.getElementById('message');
         const arBtn = document.getElementById('ar-btn');
 
-        // 📍 ฟังก์ชันเช็คว่าอยู่ในประเทศไทยไหม
+        // 1. ฟังก์ชันเช็คขอบเขตประเทศไทย
         function isInThailand(lat, lng) {
-            return lat >= 5.5 && lat <= 20.5 &&
-                lng >= 97.0 && lng <= 105.5;
+            return lat >= 5.5 && lat <= 20.5 && lng >= 97.0 && lng <= 105.5;
         }
 
-        // เริ่มเช็คตำแหน่ง
+        // 2. ตั้งค่าความแม่นยำสูง
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        };
+
+        // 3. เริ่มทำงานเมื่อโหลดหน้าเว็บ
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((position) => {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
 
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
+                    console.log(`Lat: ${userLat}, Lng: ${userLng}`);
 
-                if (isInThailand(userLat, userLng)) {
-                    messageEl.innerHTML = `✅ คุณอยู่ในประเทศไทย<br>สามารถใช้งาน AR ได้`;
-                    arBtn.style.display = 'block';
-                } else {
-                    messageEl.innerHTML = `❌ ระบบนี้ใช้ได้เฉพาะในประเทศไทย`;
-                    arBtn.style.display = 'none';
-                }
-
-            }, (error) => {
-                messageEl.innerHTML = "⚠️ กรุณาอนุญาตให้เข้าถึง GPS";
-            });
+                    if (isInThailand(userLat, userLng)) {
+                        messageEl.innerHTML = `✅ พิกัด: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}<br><span style="color:green">คุณอยู่ในพื้นที่ที่กำหนด</span>`;
+                        arBtn.style.display = 'block'; // โชว์ปุ่ม
+                    } else {
+                        messageEl.innerHTML = `📍 พิกัด: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}<br><span style="color:red">❌ ระบบนี้ใช้ได้เฉพาะในไทย</span>`;
+                    }
+                },
+                (error) => {
+                    messageEl.innerHTML = "⚠️ โปรดเปิด GPS และอนุญาตสิทธิ์เข้าถึงตำแหน่ง";
+                    console.error(error);
+                },
+                options
+            );
         } else {
-            messageEl.innerHTML = "❌ อุปกรณ์ไม่รองรับ GPS";
+            messageEl.innerHTML = "❌ อุปกรณ์ของคุณไม่รองรับ GPS";
         }
 
-        // 4. ฟังก์ชันสำหรับเปิด AR
+        // 4. ฟังก์ชันเปิด AR
         function openAR() {
             const modelViewer = document.getElementById('my-model');
-            modelViewer.activateAR(); // สั่งให้เปิดโหมด AR สแกนพื้นทันที
+            if (modelViewer.canActivateAR) {
+                modelViewer.activateAR();
+            } else {
+                alert("อุปกรณ์นี้ไม่รองรับ AR");
+            }
         }
     </script>
-
 </body>
 
 </html>
