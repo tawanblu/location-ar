@@ -2,95 +2,204 @@
 <html lang="th">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Location Based AR</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <title>WebAR: Geofencing + Tap to Place</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background: #f5f5f5;
             margin: 0;
-            padding: 40px 20px;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            /* ห้ามเลื่อนหน้าจอ */
+            font-family: 'Prompt', sans-serif;
+            background-color: #e5e5ea;
         }
 
-        h1 {
-            margin-bottom: 10px;
+        /* 1. หน้าจอซ้อนทับแบบ Glassmorphism (กระจกฝ้าโปร่งแสง) */
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            /* พื้นหลังสีดำโปร่งแสง */
+            backdrop-filter: blur(10px);
+            /* เอฟเฟกต์เบลอกระจก */
+            -webkit-backdrop-filter: blur(10px);
+            /* สำหรับ Safari (iPhone/iPad) */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: opacity 0.5s ease;
+            /* แอนิเมชันตอนเฟดออก */
         }
 
-        #distance {
-            font-size: 18px;
-            margin-top: 10px;
+        /* 2. กล่องการ์ดข้อความ (UI Card) */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 35px 25px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 85%;
+            max-width: 380px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* แอนิเมชันเด้งตอนโหลด */
         }
 
-        #arButtonContainer {
-            display: none;
-            /* ซ่อนปุ่มไว้ก่อนจนกว่าจะถึงจุดที่กำหนด */
-            margin-top: 30px;
+        @keyframes popIn {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
-        .ar-btn {
-            display: inline-block;
-            padding: 15px 30px;
-            background: #007bff;
+        h3 {
+            margin: 0 0 15px 0;
+            color: #1c1c1e;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+
+        #message {
+            font-size: 1.05em;
+            color: #555;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        /* 3. สไตล์ปุ่มกดที่ดูพรีเมียมและน่ากด */
+        #ar-btn {
+            background: linear-gradient(135deg, #007aff, #0056b3);
             color: white;
-            font-size: 18px;
-            border-radius: 50px;
-            text-decoration: none;
-            transition: 0.3s;
             border: none;
+            padding: 16px 30px;
+            border-radius: 50px;
+            font-size: 1.15em;
+            font-family: 'Prompt', sans-serif;
+            font-weight: 600;
             cursor: pointer;
+            display: none;
+            /* ซ่อนไว้ก่อนจนกว่าจะเช็ค GPS ผ่าน */
+            width: 100%;
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
         }
 
-        .ar-btn:hover {
-            background: #0056b3;
+        #ar-btn:active {
+            transform: scale(0.95);
+            /* หดตัวลงเล็กน้อยเวลากด */
+            box-shadow: 0 2px 10px rgba(0, 122, 255, 0.3);
         }
 
-        .ar-btn i {
-            margin-right: 8px;
+        /* 4. ให้ model-viewer (กล้อง AR) อยู่ด้านหลังเต็มจอ */
+        model-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            background-color: #ffffff;
+            /* สีพื้นหลังก่อนเปิดกล้อง */
         }
     </style>
 </head>
 
 <body>
-    <h1>Location Based AR</h1>
-    <p>เดินเข้าใกล้จุดที่กำหนดเพื่อเปิด AR</p>
-    <div id="distance">กำลังตรวจสอบตำแหน่ง...</div>
-    <div id="arButtonContainer"> 
-        <a id="arLink" href="#" class="ar-btn"> 
-            <i class="fa-solid fa-cube"></i> รับชม AR 
-        </a>
+
+    <div id="overlay">
+        <div class="card">
+            <h3>📍 ตรวจสอบตำแหน่ง</h3>
+            <p id="message">กำลังค้นหาสัญญาณ GPS<br>กรุณารอสักครู่...</p>
+            <button id="ar-btn" onclick="openAR()">🚀 เข้าสู่โหมด AR</button>
+        </div>
     </div>
 
-    <script> 
-        // กำหนดตำแหน่งเป้าหมาย 
-        const targetLat = 12.659111; 
-        const targetLng = 99.864299; 
-        
-        // รัศมี (เมตร) 
-        const radius = 99999999; // เปลี่ยนเป็น 500 หรือตัวเลขที่ต้องการเมื่อใช้งานจริง 
-        
-        const distanceText = document.getElementById("distance"); 
-        const arButtonContainer = document.getElementById("arButtonContainer"); 
-        const arLink = document.getElementById("arLink"); 
-        
-        // --- ตั้งค่าลิงก์โมเดล (ดึงโมเดล Astronaut มาเป็นตัวอย่าง) --- 
-        // โมเดลสำหรับ iOS (.usdz) ต้องใช้ URL เต็มๆ ที่มี https:// 
-        const iosModelUrl = "https://modelviewer.dev/shared-assets/models/Astronaut.usdz"; 
-        
-        // โมเดลสำหรับ Android (.glb) ไม่ต้องใส่ https:// ไว้ข้างหน้า (เพราะจะถูกครอบด้วย Intent) 
-        const androidModelDomainAndPath = "modelviewer.dev/shared-assets/models/Astronaut.glb"; 
-        // -------------------------------------------------------- 
-        
-        // ตรวจสอบระบบปฏิบัติการ 
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; 
-        const isAndroid = /Android/.test(navigator.userAgent); 
-        
-        // จัดเตรียมลิงก์ตาม OS 
-        if (isIOS) { 
-            arLink.href = iosModelUrl; 
-            arLink.setAttribute("rel", "ar"); // จำเป็นสำหรับ iOS 
-        } else if (isAndroid) { 
-            // โครงสร้าง Intent URL พิเศษสำหรับ Android ARCore 
-            arLink.href = `intent://${androidModelDomainAndPath}#Intent;scheme=https;package=com.google.ar.core;action=android.intent
+    <model-viewer id="my-model" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+        ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz" ar
+        ar-modes="webxr scene-viewer quick-look" camera-controls autoplay shadow-intensity="1">
+    </model-viewer>
+
+    <script>
+        // 1. พิกัดสถานที่เป้าหมายของคุณ
+        const targetLat = 12.6529929;
+        const targetLng = 99.8646328;
+        const maxDistance = 500; // รัศมี 500 เมตร
+
+        const messageEl = document.getElementById('message');
+        const arBtn = document.getElementById('ar-btn');
+        const overlayEl = document.getElementById('overlay');
+
+        // 2. ฟังก์ชันคำนวณระยะทาง
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // 3. เริ่มขอตำแหน่งผู้ใช้
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+
+                const distance = calculateDistance(userLat, userLng, targetLat, targetLng);
+
+                if (distance <= maxDistance) {
+                    messageEl.innerHTML = `<span style="color:#28a745; font-weight:600; font-size:1.1em;">✅ คุณอยู่ในพื้นที่แล้ว!</span><br><br><span style="font-size:0.9em;">(ห่างจากจุดเป้าหมาย ${Math.round(distance)} เมตร)</span>`;
+                    arBtn.style.display = 'block'; // โชว์ปุ่มเข้า AR
+                } else {
+                    messageEl.innerHTML = `<span style="color:#dc3545; font-weight:600;">❌ คุณอยู่ไกลเกินไป</span><br><br>กรุณาเดินไปยังพื้นที่กิจกรรม<br><span style="font-size:0.9em;">(ระยะทางปัจจุบัน ${Math.round(distance)} เมตร)</span>`;
+                }
+            }, (error) => {
+                messageEl.innerHTML = "⚠️ <b>ไม่สามารถระบุตำแหน่งได้</b><br><br>กรุณาอนุญาตให้เว็บไซต์เข้าถึงตำแหน่ง GPS ของคุณ (Location Services)";
+            });
+        } else {
+            messageEl.innerHTML = "❌ เบราว์เซอร์ของคุณไม่รองรับ GPS";
+        }
+
+        // 4. ฟังก์ชันสำหรับเปิด AR
+        function openAR() {
+            // เฟดหน้าจอ Overlay ออกให้ดูสมูท
+            overlayEl.style.opacity = '0';
+
+            // รอให้เฟดเสร็จ (0.5 วิ) แล้วค่อยซ่อนกล่อง และเปิด AR
+            setTimeout(() => {
+                overlayEl.style.display = 'none';
+                const modelViewer = document.getElementById('my-model');
+                modelViewer.activateAR();
+            }, 500);
+        }
+    </script>
+
+</body>
+
+</html>
