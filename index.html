@@ -2,105 +2,103 @@
 <html lang="th">
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Thailand Only</title>
 
-    <script type="module"
-        src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <title>Web AR</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
         body {
-            margin: 0;
-            font-family: sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-
-        #status-box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
+            font-family: Arial, sans-serif;
             text-align: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 80%;
-            max-width: 400px;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 40px 20px;
         }
 
-        .btn {
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #555;
+            font-size: 16px;
+        }
+
+        #arButtonContainer {
+            /* เปลี่ยนเป็น block เพื่อให้ปุ่มแสดงทันที */
+            display: block;
+            margin-top: 40px;
+        }
+
+        .ar-btn {
+            display: inline-block;
+            padding: 15px 30px;
             background: #007bff;
             color: white;
+            font-size: 18px;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: 0.3s;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-top: 15px;
             cursor: pointer;
-            display: none;
-            width: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        model-viewer {
-            width: 100%;
-            height: 400px;
-            display: none;
+        .ar-btn:hover {
+            background: #0056b3;
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .ar-btn i {
+            margin-right: 8px;
         }
     </style>
 </head>
 
 <body>
 
-    <div id="status-box">
-        <h3>📍 ตรวจสอบตำแหน่งของคุณ</h3>
-        <p id="message">กำลังตรวจสอบ GPS...</p>
+    <h1>สัมผัสประสบการณ์ AR</h1>
+    <p>กดปุ่มด้านล่างเพื่อเปิดดูโมเดล 3 มิติในพื้นที่จริงของคุณ</p>
 
-        <button id="ar-btn" class="btn" onclick="openAR()">กดเพื่อวางโมเดล AR</button>
+    <div id="arButtonContainer">
+        <a id="arLink" href="#" class="ar-btn">
+            <i class="fa-solid fa-cube"></i>
+            รับชม AR
+        </a>
     </div>
 
-    <model-viewer id="my-model" src="./AR_MOVE.glb" ios-src="./AR_Move2.usdz" ar
-        ar-modes="webxr scene-viewer quick-look" camera-controls autoplay shadow-intensity="1">
-    </model-viewer>
-
     <script>
-        const messageEl = document.getElementById('message');
-        const arBtn = document.getElementById('ar-btn');
+        const arLink = document.getElementById("arLink");
 
-        // เริ่มทำงานหลังโหลดหน้า
-        window.onload = () => {
+        // --- ตั้งค่าลิงก์โมเดล ---
+        // โมเดลสำหรับ iOS (.usdz)
+        const iosModelUrl = "https://modelviewer.dev/shared-assets/models/Astronaut.usdz";
 
-            if (!navigator.geolocation) {
-                messageEl.innerHTML = "❌ อุปกรณ์ไม่รองรับ GPS";
-                return;
-            }
+        // โมเดลสำหรับ Android (.glb) 
+        const androidModelDomainAndPath = "modelviewer.dev/shared-assets/models/Astronaut.glb";
+        // --------------------------------------------------------
 
-            navigator.geolocation.getCurrentPosition((position) => {
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
+        // ตรวจสอบระบบปฏิบัติการ
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
 
-                // 🇹🇭 ขอบเขตประเทศไทย
-                const isInThailand =
-                    userLat >= 5.5 && userLat <= 20.5 &&
-                    userLng >= 97.0 && userLng <= 105.5;
-
-                if (isInThailand) {
-                    messageEl.innerHTML = `✅ คุณอยู่ในประเทศไทย<br>สามารถใช้งาน AR ได้`;
-                    arBtn.style.display = 'block';
-                } else {
-                    messageEl.innerHTML = `❌ ระบบนี้ใช้ได้เฉพาะในประเทศไทย`;
-                }
-
-            }, (error) => {
-                messageEl.innerHTML = "⚠️ กรุณาอนุญาตให้เข้าถึง GPS";
-            });
-        };
-
-        function openAR() {
-            const modelViewer = document.getElementById('my-model');
-            modelViewer.activateAR();
+        // จัดเตรียมลิงก์ตาม OS
+        if (isIOS) {
+            arLink.href = iosModelUrl;
+            arLink.setAttribute("rel", "ar");
+        } else if (isAndroid) {
+            arLink.href = `intent://${androidModelDomainAndPath}#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=https://developers.google.com/ar;end;`;
+            arLink.removeAttribute("rel");
+        } else {
+            // หากเปิดบน PC
+            arLink.href = "#";
+            arLink.onclick = function (e) {
+                e.preventDefault();
+                alert("กรุณาเปิดหน้านี้บนสมาร์ทโฟน (iOS หรือ Android) เพื่อรับชม AR ครับ");
+            };
         }
     </script>
 
