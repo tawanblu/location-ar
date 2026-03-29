@@ -4,8 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Goodness AR - Location Based</title>
-  <!-- Model Viewer สำหรับ AR ทั้ง iOS/Android -->
+  <title>Ganesha AR - 1km Radius</title>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
   <style>
     body {
@@ -31,7 +30,7 @@
     }
 
     .btn {
-      background: linear-gradient(135deg, #007bff, #0056b3);
+      background: linear-gradient(135deg, #ff9966, #ff5e62);
       color: white;
       border: none;
       padding: 15px;
@@ -39,20 +38,19 @@
       font-size: 18px;
       margin-top: 20px;
       cursor: pointer;
-      display: none;
+      display: none; /* จะแสดงเมื่อเข้าระยะ 1000 เมตร */
       width: 100%;
       font-weight: bold;
       transition: 0.3s;
+      box-shadow: 0 4px 15px rgba(255, 94, 98, 0.4);
     }
 
-    .btn:active {
-      transform: scale(0.98);
-    }
+    .btn:active { transform: scale(0.98); }
 
     .distance-info {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: bold;
-      color: #007bff;
+      color: #ff5e62;
       margin: 10px 0;
     }
 
@@ -62,26 +60,23 @@
       line-height: 1.5;
     }
 
-    model-viewer {
-      display: none;
-    }
-
-    /* ซ่อนตัวอย่าง 3D ในหน้าเว็บ */
+    model-viewer { display: none; }
   </style>
 </head>
 
 <body>
 
   <div id="status-box">
-    <h2 style="margin-top:0;">🌟 Goodness AR</h2>
-    <p id="message">กำลังเข้าถึงระบบ GPS...</p>
-    <div id="distance-display" class="distance-info">-- ม.</div>
-    <button id="ar-btn" class="btn" onclick="openAR()">✨ วางรางวัลความดี (AR)</button>
+    <h2 style="margin-top:0; color: #ff5e62;">🕉️ Ganesha AR</h2>
+    <p id="message">ระบบกำลังคำนวณระยะทางจาก GPS...</p>
+    <div id="distance-display" class="distance-info">--</div>
+    <button id="ar-btn" class="btn" onclick="openAR()">✨ รับพรพระพิฆเนศ (AR)</button>
   </div>
 
-  <!-- โมเดลความดี (เปลี่ยน src เป็นไฟล์ของคุณเองได้) -->
-  <model-viewer id="my-model" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-    ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz" ar ar-modes="webxr scene-viewer quick-look"
+  <model-viewer id="my-model" 
+    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb" 
+    ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz" 
+    ar ar-modes="webxr scene-viewer quick-look"
     camera-controls touch-action="pan-y">
   </model-viewer>
 
@@ -90,12 +85,11 @@
     const distanceEl = document.getElementById('distance-display');
     const arBtn = document.getElementById('ar-btn');
 
-    // 🎯 1. ตั้งค่าพิกัดจุดทำความดี (ตัวอย่าง: หน้าเสาธง/ห้องสมุด)
-    const TARGET_LAT = 13.7563; // แก้เป็นพิกัดจริงของคุณ
+    // 🎯 ตั้งค่าพิกัดเป้าหมาย
+    const TARGET_LAT = 13.7563; 
     const TARGET_LNG = 100.5018;
-    const ACTIVATION_RADIUS = 30; // รัศมี 30 เมตร
+    const ACTIVATION_RADIUS = 1000; // ✅ ปรับเป็น 1000 เมตร (1 กิโลเมตร)
 
-    // ฟังก์ชันคำนวณระยะทาง (Haversine Formula)
     function calculateDistance(lat1, lon1, lat2, lon2) {
       const R = 6371e3;
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -106,51 +100,45 @@
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    // 📡 2. ติดตามตำแหน่งแบบ Real-time (WatchPosition)
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
         (position) => {
-          const {
-            latitude,
-            longitude,
-            accuracy
-          } = position.coords;
+          const { latitude, longitude } = position.coords;
           const distance = calculateDistance(latitude, longitude, TARGET_LAT, TARGET_LNG);
 
-          distanceEl.innerText = `${Math.round(distance)} ม.`;
+          // แสดงระยะทาง (ถ้าเกิน 1 กม. ให้โชว์เป็น km)
+          if (distance >= 1000) {
+            distanceEl.innerText = `${(distance / 1000).toFixed(2)} กม.`;
+          } else {
+            distanceEl.innerText = `${Math.round(distance)} ม.`;
+          }
 
+          // เงื่อนไขเปิดปุ่ม AR เมื่อระยะทางน้อยกว่าหรือเท่ากับ 1000 เมตร
           if (distance <= ACTIVATION_RADIUS) {
-            messageEl.innerHTML = "<span style='color:green'><b>✅ ถึงจุดทำความดีแล้ว!</b><br>กดปุ่มด้านล่างเพื่อรับรางวัล AR</span>";
+            messageEl.innerHTML = "<span style='color:green'><b>✅ เข้าสู่เขตมงคลแล้ว!</b><br>คุณสามารถอัญเชิญพระพิฆเนศได้แล้ว</span>";
             arBtn.style.display = 'block';
           } else {
-            messageEl.innerHTML = `📍 เดินเข้าใกล้จุดหมายอีกนิด<br><small>(ความแม่นยำ GPS: ${Math.round(accuracy)} ม.)</small>`;
+            messageEl.innerHTML = `📍 กรุณาเดินทางเข้าใกล้จุดเป้าหมาย<br>ในรัศมี 1 กิโลเมตรเพื่อรับพร`;
             arBtn.style.display = 'none';
           }
         },
         (error) => {
-          messageEl.innerHTML = "⚠️ กรุณาเปิด GPS และอนุญาตสิทธิ์ใน Browser";
-          console.error(error);
-        }, {
-          enableHighAccuracy: true,
-          maximumAge: 0
-        }
+          messageEl.innerHTML = "⚠️ โปรดเปิด GPS และอนุญาตสิทธิ์เข้าถึงตำแหน่ง";
+        }, 
+        { enableHighAccuracy: true }
       );
     } else {
-      messageEl.innerHTML = "❌ อุปกรณ์ไม่รองรับระบบระบุตำแหน่ง";
+      messageEl.innerHTML = "❌ อุปกรณ์ไม่รองรับ GPS";
     }
 
-    // 📱 3. ฟังก์ชันเปิด AR สำหรับทั้งสองระบบ
     function openAR() {
       const modelViewer = document.getElementById('my-model');
-      // ตรวจสอบว่า Browser รองรับ AR หรือไม่
       if (modelViewer.canActivateAR) {
         modelViewer.activateAR();
       } else {
-        // กรณี iOS รุ่นเก่าหรือไม่รองรับ WebXR/QuickLook
-        alert("ขออภัย อุปกรณ์ของคุณอาจไม่รองรับ AR หรือต้องเปิดผ่าน Safari/Chrome ล่าสุด");
+        alert("อุปกรณ์ของคุณไม่รองรับการแสดงผล AR");
       }
     }
   </script>
 </body>
-
 </html>
