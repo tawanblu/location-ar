@@ -2,119 +2,155 @@
 <html lang="th">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR Geofence - Fixed</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    <style>
-        body {
-            margin: 0;
-            font-family: sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Goodness AR - Location Based</title>
+  <!-- Model Viewer สำหรับ AR ทั้ง iOS/Android -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Kanit', sans-serif;
+      background: #eef2f3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-        #status-box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 80%;
-            max-width: 400px;
-        }
+    #status-box {
+      background: white;
+      padding: 25px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      width: 85%;
+      max-width: 400px;
+      z-index: 10;
+    }
 
-        .btn {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 5px;
-            font-size: 16px;
-            margin-top: 15px;
-            cursor: pointer;
-            display: none;
-            width: 100%;
-            font-weight: bold;
-        }
+    .btn {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 18px;
+      margin-top: 20px;
+      cursor: pointer;
+      display: none;
+      width: 100%;
+      font-weight: bold;
+      transition: 0.3s;
+    }
 
-        model-viewer {
-            display: none;
-        }
+    .btn:active {
+      transform: scale(0.98);
+    }
 
-        /* ซ่อนตัว viewer หลักไว้ ใช้แค่เปิด AR */
-    </style>
+    .distance-info {
+      font-size: 24px;
+      font-weight: bold;
+      color: #007bff;
+      margin: 10px 0;
+    }
+
+    #message {
+      color: #666;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    model-viewer {
+      display: none;
+    }
+
+    /* ซ่อนตัวอย่าง 3D ในหน้าเว็บ */
+  </style>
 </head>
 
 <body>
 
-    <div id="status-box">
-        <h3>📍 ตรวจสอบตำแหน่ง</h3>
-        <p id="message">กำลังค้นหาตำแหน่ง GPS...</p>
-        <button id="ar-btn" class="btn" onclick="openAR()">✅ วางโมเดล AR</button>
-    </div>
+  <div id="status-box">
+    <h2 style="margin-top:0;">🌟 Goodness AR</h2>
+    <p id="message">กำลังเข้าถึงระบบ GPS...</p>
+    <div id="distance-display" class="distance-info">-- ม.</div>
+    <button id="ar-btn" class="btn" onclick="openAR()">✨ วางรางวัลความดี (AR)</button>
+  </div>
 
-    <model-viewer id="my-model" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-        ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz" ar
-        ar-modes="webxr scene-viewer quick-look" camera-controls>
-    </model-viewer>
+  <!-- โมเดลความดี (เปลี่ยน src เป็นไฟล์ของคุณเองได้) -->
+  <model-viewer id="my-model" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+    ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz" ar ar-modes="webxr scene-viewer quick-look"
+    camera-controls touch-action="pan-y">
+  </model-viewer>
 
-    <script>
-        const messageEl = document.getElementById('message');
-        const arBtn = document.getElementById('ar-btn');
+  <script>
+    const messageEl = document.getElementById('message');
+    const distanceEl = document.getElementById('distance-display');
+    const arBtn = document.getElementById('ar-btn');
 
-        // 1. ฟังก์ชันเช็คขอบเขตประเทศไทย
-        function isInThailand(lat, lng) {
-            return lat >= 5.5 && lat <= 20.5 && lng >= 97.0 && lng <= 105.5;
+    // 🎯 1. ตั้งค่าพิกัดจุดทำความดี (ตัวอย่าง: หน้าเสาธง/ห้องสมุด)
+    const TARGET_LAT = 13.7563; // แก้เป็นพิกัดจริงของคุณ
+    const TARGET_LNG = 100.5018;
+    const ACTIVATION_RADIUS = 30; // รัศมี 30 เมตร
+
+    // ฟังก์ชันคำนวณระยะทาง (Haversine Formula)
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371e3;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // 📡 2. ติดตามตำแหน่งแบบ Real-time (WatchPosition)
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(
+        (position) => {
+          const {
+            latitude,
+            longitude,
+            accuracy
+          } = position.coords;
+          const distance = calculateDistance(latitude, longitude, TARGET_LAT, TARGET_LNG);
+
+          distanceEl.innerText = `${Math.round(distance)} ม.`;
+
+          if (distance <= ACTIVATION_RADIUS) {
+            messageEl.innerHTML = "<span style='color:green'><b>✅ ถึงจุดทำความดีแล้ว!</b><br>กดปุ่มด้านล่างเพื่อรับรางวัล AR</span>";
+            arBtn.style.display = 'block';
+          } else {
+            messageEl.innerHTML = `📍 เดินเข้าใกล้จุดหมายอีกนิด<br><small>(ความแม่นยำ GPS: ${Math.round(accuracy)} ม.)</small>`;
+            arBtn.style.display = 'none';
+          }
+        },
+        (error) => {
+          messageEl.innerHTML = "⚠️ กรุณาเปิด GPS และอนุญาตสิทธิ์ใน Browser";
+          console.error(error);
+        }, {
+          enableHighAccuracy: true,
+          maximumAge: 0
         }
+      );
+    } else {
+      messageEl.innerHTML = "❌ อุปกรณ์ไม่รองรับระบบระบุตำแหน่ง";
+    }
 
-        // 2. ตั้งค่าความแม่นยำสูง
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-        };
-
-        // 3. เริ่มทำงานเมื่อโหลดหน้าเว็บ
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-
-                    console.log(`Lat: ${userLat}, Lng: ${userLng}`);
-
-                    if (isInThailand(userLat, userLng)) {
-                        messageEl.innerHTML = `✅ พิกัด: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}<br><span style="color:green">คุณอยู่ในพื้นที่ที่กำหนด</span>`;
-                        arBtn.style.display = 'block'; // โชว์ปุ่ม
-                    } else {
-                        messageEl.innerHTML = `📍 พิกัด: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}<br><span style="color:red">❌ ระบบนี้ใช้ได้เฉพาะในไทย</span>`;
-                    }
-                },
-                (error) => {
-                    messageEl.innerHTML = "⚠️ โปรดเปิด GPS และอนุญาตสิทธิ์เข้าถึงตำแหน่ง";
-                    console.error(error);
-                },
-                options
-            );
-        } else {
-            messageEl.innerHTML = "❌ อุปกรณ์ของคุณไม่รองรับ GPS";
-        }
-
-        // 4. ฟังก์ชันเปิด AR
-        function openAR() {
-            const modelViewer = document.getElementById('my-model');
-            if (modelViewer.canActivateAR) {
-                modelViewer.activateAR();
-            } else {
-                alert("อุปกรณ์นี้ไม่รองรับ AR");
-            }
-        }
-    </script>
+    // 📱 3. ฟังก์ชันเปิด AR สำหรับทั้งสองระบบ
+    function openAR() {
+      const modelViewer = document.getElementById('my-model');
+      // ตรวจสอบว่า Browser รองรับ AR หรือไม่
+      if (modelViewer.canActivateAR) {
+        modelViewer.activateAR();
+      } else {
+        // กรณี iOS รุ่นเก่าหรือไม่รองรับ WebXR/QuickLook
+        alert("ขออภัย อุปกรณ์ของคุณอาจไม่รองรับ AR หรือต้องเปิดผ่าน Safari/Chrome ล่าสุด");
+      }
+    }
+  </script>
 </body>
 
 </html>
