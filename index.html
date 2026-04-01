@@ -105,6 +105,26 @@
             transform: scale(0.95);
         }
 
+        /* 🌟 ข้อความแนะนำการใช้นิ้วสัมผัส 🌟 */
+        #ar-hint {
+            position: fixed;
+            bottom: 90px; /* ลอยอยู่เหนือปุ่มกดหมุน */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(212, 168, 67, 0.4);
+            color: var(--gold-light);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 13px;
+            white-space: nowrap;
+            display: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+
         /* ตกแต่ง UI */
         .bg-gradient { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(196, 64, 10, 0.25) 0%, transparent 70%), linear-gradient(180deg, #0d0400 0%, #1a0800 50%, #0d0200 100%); z-index: 0; }
         .particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
@@ -162,6 +182,10 @@
     </div>
 
     <button id="close-ar-btn" onclick="stopAR()">❮ ปิดกล้อง</button>
+
+    <div id="ar-hint">
+        💡 ใช้นิ้วปัดเพื่อหมุน และถ่างนิ้วเพื่อย่อ-ขยายโมเดล
+    </div>
 
     <div id="ar-controls">
         <button class="control-btn" onclick="rotateModel(-30)">
@@ -255,12 +279,14 @@
             document.getElementById('main-menu-ui').classList.add('hide');
             document.getElementById('close-ar-btn').style.display = 'block';
             document.getElementById('ar-controls').style.display = 'flex';
+            document.getElementById('ar-hint').style.display = 'block'; // 🌟 โชว์ข้อความแนะนำ
         }
 
         function stopAR() {
             document.getElementById('main-menu-ui').classList.remove('hide');
             document.getElementById('close-ar-btn').style.display = 'none';
             document.getElementById('ar-controls').style.display = 'none';
+            document.getElementById('ar-hint').style.display = 'none'; // 🌟 ซ่อนข้อความแนะนำ
             
             audio.pause();
             audio.currentTime = 0; 
