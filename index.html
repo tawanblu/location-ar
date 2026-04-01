@@ -51,6 +51,7 @@
             pointer-events: none;
         }
 
+        /* ปุ่มปิด AR มุมซ้ายบน */
         #close-ar-btn {
             position: fixed;
             top: 20px;
@@ -66,6 +67,41 @@
             display: none; 
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        /* 🌟 ส่วนที่เพิ่มใหม่: แผงปุ่มควบคุมการหมุนด้านล่าง 🌟 */
+        #ar-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: none; /* ซ่อนไว้ก่อน จะโชว์ตอนเปิด AR */
+            gap: 15px;
+        }
+
+        .control-btn {
+            background: rgba(26, 10, 0, 0.85);
+            border: 1px solid var(--gold);
+            color: var(--gold-light);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn:active {
+            background: var(--gold);
+            color: var(--deep);
+            transform: scale(0.95);
         }
 
         /* ตกแต่ง UI */
@@ -124,6 +160,15 @@
 
     <button id="close-ar-btn" onclick="stopAR()">❮ ปิดกล้อง</button>
 
+    <div id="ar-controls">
+        <button class="control-btn" onclick="rotateModel(-30)">
+            <span style="font-size: 20px;">↺</span> หมุนซ้าย
+        </button>
+        <button class="control-btn" onclick="rotateModel(30)">
+            หมุนขวา <span style="font-size: 20px;">↻</span>
+        </button>
+    </div>
+
     <a-scene 
         embedded 
         arjs="sourceType: webcam; debugUIEnabled: false;" 
@@ -161,7 +206,7 @@
     </a-scene>
 
     <script>
-        // Particles
+        // สร้าง Particles
         const particleContainer = document.getElementById('particles');
         for (let i = 0; i < 22; i++) {
             const p = document.createElement('div');
@@ -171,14 +216,31 @@
             particleContainer.appendChild(p);
         }
 
+        // ฟังก์ชันเริ่ม AR
         function startAR() {
             document.getElementById('main-menu-ui').classList.add('hide');
             document.getElementById('close-ar-btn').style.display = 'block';
+            document.getElementById('ar-controls').style.display = 'flex'; // แสดงปุ่มหมุน
         }
 
+        // ฟังก์ชันปิด AR
         function stopAR() {
             document.getElementById('main-menu-ui').classList.remove('hide');
             document.getElementById('close-ar-btn').style.display = 'none';
+            document.getElementById('ar-controls').style.display = 'none'; // ซ่อนปุ่มหมุน
+        }
+
+        // 🌟 ฟังก์ชันคำนวณการหมุนโมเดล 🌟
+        function rotateModel(degrees) {
+            const model = document.getElementById('ganesha-entity');
+            const currentRot = model.getAttribute('rotation');
+            
+            // สั่งอัปเดตแกน Y (แกนหมุนรอบตัวของวัตถุ 3D) เพิ่ม/ลดทีละ 30 องศาตามที่ส่งค่ามา
+            model.setAttribute('rotation', {
+                x: currentRot.x,
+                y: currentRot.y + degrees,
+                z: currentRot.z
+            });
         }
     </script>
 </body>
