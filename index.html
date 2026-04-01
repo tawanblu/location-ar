@@ -51,7 +51,6 @@
             pointer-events: none;
         }
 
-        /* ปุ่มปิด AR มุมซ้ายบน */
         #close-ar-btn {
             position: fixed;
             top: 20px;
@@ -69,14 +68,14 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        /* 🌟 ส่วนที่เพิ่มใหม่: แผงปุ่มควบคุมการหมุนด้านล่าง 🌟 */
+        /* แผงปุ่มควบคุมการหมุนด้านล่าง */
         #ar-controls {
             position: fixed;
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
-            display: none; /* ซ่อนไว้ก่อน จะโชว์ตอนเปิด AR */
+            display: none; 
             gap: 15px;
         }
 
@@ -90,7 +89,6 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            backdrop-filter: blur(4px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             transition: all 0.2s;
             display: flex;
@@ -193,7 +191,7 @@
             <a-entity 
                 id="ganesha-entity"
                 gltf-model="#ganesha-model" 
-                scale="0.5 0.5 0.5" 
+                scale="1 1 1" 
                 position="0 0 0" 
                 rotation="-90 0 0" 
                 class="clickable"
@@ -206,7 +204,7 @@
     </a-scene>
 
     <script>
-        // สร้าง Particles
+        // particles
         const particleContainer = document.getElementById('particles');
         for (let i = 0; i < 22; i++) {
             const p = document.createElement('div');
@@ -216,26 +214,21 @@
             particleContainer.appendChild(p);
         }
 
-        // ฟังก์ชันเริ่ม AR
         function startAR() {
             document.getElementById('main-menu-ui').classList.add('hide');
             document.getElementById('close-ar-btn').style.display = 'block';
-            document.getElementById('ar-controls').style.display = 'flex'; // แสดงปุ่มหมุน
+            document.getElementById('ar-controls').style.display = 'flex';
         }
 
-        // ฟังก์ชันปิด AR
         function stopAR() {
             document.getElementById('main-menu-ui').classList.remove('hide');
             document.getElementById('close-ar-btn').style.display = 'none';
-            document.getElementById('ar-controls').style.display = 'none'; // ซ่อนปุ่มหมุน
+            document.getElementById('ar-controls').style.display = 'none';
         }
 
-        // 🌟 ฟังก์ชันคำนวณการหมุนโมเดล 🌟
         function rotateModel(degrees) {
             const model = document.getElementById('ganesha-entity');
             const currentRot = model.getAttribute('rotation');
-            
-            // สั่งอัปเดตแกน Y (แกนหมุนรอบตัวของวัตถุ 3D) เพิ่ม/ลดทีละ 30 องศาตามที่ส่งค่ามา
             model.setAttribute('rotation', {
                 x: currentRot.x,
                 y: currentRot.y + degrees,
