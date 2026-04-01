@@ -31,6 +31,7 @@
         }
 
         body {
+            /* บังคับใช้ฟอนต์สารบัญทั้งหน้าเว็บ */
             font-family: 'Sarabun', sans-serif;
             background: var(--deep);
             min-height: 100vh;
@@ -54,7 +55,6 @@
             z-index: 0;
         }
 
-        /* Floating particles */
         .particles {
             position: fixed;
             inset: 0;
@@ -90,7 +90,6 @@
             }
         }
 
-        /* Mandala background */
         .mandala-bg {
             position: fixed;
             top: 50%;
@@ -137,7 +136,6 @@
             }
         }
 
-        /* Top gem accent */
         .gem-top {
             width: 18px;
             height: 18px;
@@ -177,7 +175,6 @@
             width: 100%;
         }
 
-        /* Gold shimmer line top */
         .card-inner::before {
             content: '';
             position: absolute;
@@ -189,7 +186,6 @@
             opacity: 0.7;
         }
 
-        /* Corner ornaments */
         .card-inner::after {
             content: '';
             position: absolute;
@@ -239,8 +235,8 @@
             }
         }
 
-        /* === DEITY SYMBOL === */
         .deity-icon {
+            color: whitesmoke;
             font-size: 52px;
             line-height: 1;
             margin-bottom: 6px;
@@ -261,7 +257,6 @@
             }
         }
 
-        /* === TITLE === */
         .title-sanskrit {
             font-family: 'Cinzel Decorative', serif;
             font-size: 11px;
@@ -294,7 +289,6 @@
             animation: fade-in 1.5s 0.6s both;
         }
 
-        /* === DIVIDER === */
         .divider {
             display: flex;
             align-items: center;
@@ -321,7 +315,6 @@
             opacity: 0.7;
         }
 
-        /* === DESCRIPTION === */
         .description {
             font-size: 15px;
             font-weight: 300;
@@ -337,7 +330,6 @@
             font-weight: 600;
         }
 
-        /* === AR BUTTON === */
         .btn-wrapper {
             position: relative;
             animation: fade-in 1.5s 1s both;
@@ -430,7 +422,6 @@
             }
         }
 
-        /* === FOOTER TEXT === */
         .footer-note {
             margin-top: 20px;
             font-size: 11.5px;
@@ -440,7 +431,6 @@
             animation: fade-in 2s 1.2s both;
         }
 
-        /* === BOTTOM GEMS === */
         .gems-row {
             display: flex;
             gap: 10px;
@@ -475,11 +465,6 @@
             justify-content: center;
         }
 
-        #fallback-viewer model-viewer {
-            width: 100%;
-            height: 70vh;
-        }
-
         .close-btn {
             margin-top: 16px;
             background: none;
@@ -495,30 +480,88 @@
         model-viewer {
             display: none;
         }
+
+        /* === LOADING PROGRESS BAR === */
+        .custom-progress-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            inset: 0;
+            background: rgba(26, 10, 0, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 10;
+            transition: opacity 0.4s ease;
+        }
+
+        .update-bar {
+            width: 60%;
+            max-width: 200px;
+            height: 4px;
+            background: rgba(212, 168, 67, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .update-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: var(--progress, 0%);
+            background: linear-gradient(90deg, var(--gold-light), var(--gold));
+            transition: width 0.25s;
+        }
+
+        .loading-text {
+            margin-top: 15px;
+            color: var(--gold-light);
+            font-family: 'Sarabun', sans-serif;
+            font-size: 14px;
+            letter-spacing: 0.05em;
+            animation: text-pulse 1.5s infinite;
+        }
+
+        @keyframes text-pulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+                text-shadow: 0 0 10px rgba(212, 168, 67, 0.5);
+            }
+        }
+
+        .custom-progress-bar.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- Background layers -->
     <div class="bg-gradient"></div>
     <div class="particles" id="particles"></div>
 
-    <!-- Rotating mandala SVG -->
     <svg class="mandala-bg" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="200" cy="200" r="195" stroke="#d4a843" stroke-width="0.5" />
         <circle cx="200" cy="200" r="160" stroke="#d4a843" stroke-width="0.3" />
         <circle cx="200" cy="200" r="120" stroke="#d4a843" stroke-width="0.5" />
         <circle cx="200" cy="200" r="80" stroke="#d4a843" stroke-width="0.3" />
         <circle cx="200" cy="200" r="40" stroke="#d4a843" stroke-width="0.5" />
-        <!-- 12 spokes -->
         <line x1="200" y1="5" x2="200" y2="395" stroke="#d4a843" stroke-width="0.3" />
         <line x1="5" y1="200" x2="395" y2="200" stroke="#d4a843" stroke-width="0.3" />
         <line x1="32" y1="68" x2="368" y2="332" stroke="#d4a843" stroke-width="0.3" />
         <line x1="68" y1="32" x2="332" y2="368" stroke="#d4a843" stroke-width="0.3" />
         <line x1="200" y1="5" x2="200" y2="395" stroke="#d4a843" stroke-width="0.3" transform="rotate(30 200 200)" />
         <line x1="200" y1="5" x2="200" y2="395" stroke="#d4a843" stroke-width="0.3" transform="rotate(60 200 200)" />
-        <!-- 8 diamonds on outer ring -->
         <polygon points="200,8 205,20 200,32 195,20" fill="#d4a843" transform="rotate(0 200 200)" />
         <polygon points="200,8 205,20 200,32 195,20" fill="#d4a843" transform="rotate(45 200 200)" />
         <polygon points="200,8 205,20 200,32 195,20" fill="#d4a843" transform="rotate(90 200 200)" />
@@ -529,7 +572,6 @@
         <polygon points="200,8 205,20 200,32 195,20" fill="#d4a843" transform="rotate(315 200 200)" />
     </svg>
 
-    <!-- Main Card -->
     <div class="card">
         <div class="gem-top"></div>
         <div class="card-inner">
@@ -542,7 +584,7 @@
                 <div class="line"></div>
             </div>
 
-            <span class="deity-icon">🕉️ </span>
+            <span class="deity-icon">ॐ </span>
             <br>
 
             <div class="title-main">Ganesha AR</div>
@@ -578,23 +620,25 @@
         </div>
     </div>
 
-    <!-- Hidden main model-viewer for AR trigger -->
-    <model-viewer id="my-model" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-        ios-src="https://modelviewer.dev/shared-assets/models/Astronaut.usdz" ar
-        ar-modes="webxr scene-viewer quick-look" camera-controls touch-action="pan-y" alt="โมเดลพระพิฆเนศ">
+    <model-viewer id="my-model" src="model\AR_MOVE4.glb" ios-src="model\AR_Move2.usdz" ar
+        ar-modes="webxr scene-viewer quick-look" camera-controls touch-action="pan-y" alt="โมเดลพระพิฆเนศ" autoplay>
     </model-viewer>
 
-    <!-- Fallback 3D viewer -->
     <div id="fallback-viewer">
-        <model-viewer id="fallback-model" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-            camera-controls touch-action="pan-y" auto-rotate alt="โมเดลพระพิฆเนศ"
-            style="display:block; width:100%; height:70vh;">
+        <model-viewer id="fallback-model" src="model\AR_MOVE4.glb" camera-controls touch-action="pan-y" auto-rotate
+            alt="โมเดลพระพิฆเนศ" style="display:block; width:100%; height:70vh;" autoplay>
+
+            <div slot="progress-bar" class="custom-progress-bar">
+                <div class="update-bar"></div>
+                <div class="loading-text">กำลังอัญเชิญองค์พิฆเนศ... <span id="progress-percent">0%</span></div>
+            </div>
+
         </model-viewer>
         <button class="close-btn" onclick="closeFallback()">✕ ปิด</button>
     </div>
 
     <script>
-        // Generate floating gold particles
+        // สร้าง Particles สีทองลอยขึ้น
         const particleContainer = document.getElementById('particles');
         for (let i = 0; i < 22; i++) {
             const p = document.createElement('div');
@@ -611,19 +655,40 @@
             particleContainer.appendChild(p);
         }
 
+        // ฟังก์ชันเปิด AR หรือ Fallback
         function openAR() {
             const modelViewer = document.getElementById('my-model');
             if (modelViewer.canActivateAR) {
                 modelViewer.activateAR();
             } else {
-                // Show inline 3D fallback
                 document.getElementById('fallback-viewer').style.display = 'flex';
             }
         }
 
+        // ฟังก์ชันปิด Fallback
         function closeFallback() {
             document.getElementById('fallback-viewer').style.display = 'none';
         }
+
+        // ระบบจัดการ Loading Bar สำหรับ Fallback Model
+        const modelViewerFallback = document.querySelector('#fallback-model');
+        const progressBar = document.querySelector('.custom-progress-bar');
+        const updateBar = document.querySelector('.update-bar');
+        const progressPercent = document.querySelector('#progress-percent');
+
+        modelViewerFallback.addEventListener('progress', (event) => {
+            const progress = event.detail.totalProgress * 100;
+            updateBar.style.setProperty('--progress', `${progress}%`);
+            progressPercent.textContent = `${Math.round(progress)}%`;
+
+            if (progress === 100) {
+                setTimeout(() => {
+                    progressBar.classList.add('hide');
+                }, 400);
+            } else {
+                progressBar.classList.remove('hide');
+            }
+        });
     </script>
 </body>
 
