@@ -68,7 +68,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        /* แผงปุ่มควบคุมการหมุนด้านล่าง */
+        /* แผงปุ่มควบคุมด้านล่าง */
         #ar-controls {
             position: fixed;
             bottom: 30px;
@@ -76,24 +76,27 @@
             transform: translateX(-50%);
             z-index: 1000;
             display: none; 
-            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 90%;
+            gap: 10px;
         }
 
         .control-btn {
             background: rgba(26, 10, 0, 0.85);
             border: 1px solid var(--gold);
             color: var(--gold-light);
-            padding: 12px 24px;
+            padding: 10px 18px;
             border-radius: 12px;
             font-family: 'Sarabun', sans-serif;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .control-btn:active {
@@ -126,6 +129,8 @@
 
 <body>
 
+    <audio id="narration-audio" src="demovoice.mp3" preload="auto"></audio>
+
     <div id="main-menu-ui">
         <div class="bg-gradient"></div>
         <div class="particles" id="particles"></div>
@@ -142,8 +147,8 @@
 
                 <p class="description">
                     อัญเชิญพระพิฆเนศผ่าน WebAR<br>
-                    สแกนป้ายเพื่อรับพรได้ทันที<br>
-                    (โปรดอนุญาตการใช้กล้อง)
+                    สแกนป้ายเพื่อรับพรและรับฟังคำบรรยาย<br>
+                    (โปรดอนุญาตการใช้กล้องและเปิดเสียง)
                 </p>
 
                 <div class="btn-wrapper">
@@ -160,10 +165,13 @@
 
     <div id="ar-controls">
         <button class="control-btn" onclick="rotateModel(-30)">
-            <span style="font-size: 20px;">↺</span> หมุนซ้าย
+            <span style="font-size: 18px;">↺</span> ซ้าย
         </button>
         <button class="control-btn" onclick="rotateModel(30)">
-            หมุนขวา <span style="font-size: 20px;">↻</span>
+            ขวา <span style="font-size: 18px;">↻</span>
+        </button>
+        <button class="control-btn" id="audio-btn" onclick="toggleAudio()" style="background: rgba(122, 26, 10, 0.85);">
+            <span style="font-size: 18px;">🔇</span> เสียง
         </button>
     </div>
 
@@ -204,7 +212,7 @@
     </a-scene>
 
     <script>
-        // particles
+        // สร้าง Particles
         const particleContainer = document.getElementById('particles');
         for (let i = 0; i < 22; i++) {
             const p = document.createElement('div');
@@ -213,6 +221,35 @@
             p.style.cssText = `width: ${size}px; height: ${size}px; left: ${Math.random() * 100}%; animation-duration: ${Math.random() * 12 + 8}s; animation-delay: ${Math.random() * -20}s;`;
             particleContainer.appendChild(p);
         }
+
+        // ================= ระบบจัดการเสียง =================
+        const audio = document.getElementById('narration-audio');
+        const audioBtn = document.getElementById('audio-btn');
+        const marker = document.getElementById('markerA');
+
+        function toggleAudio() {
+            if (audio.paused) {
+                audio.play();
+                audioBtn.innerHTML = '<span style="font-size: 18px;">🔊</span> เสียง';
+            } else {
+                audio.pause();
+                audioBtn.innerHTML = '<span style="font-size: 18px;">🔇</span> เสียง';
+            }
+        }
+
+        marker.addEventListener('markerFound', function() {
+            audio.play().then(() => {
+                audioBtn.innerHTML = '<span style="font-size: 18px;">🔊</span> เสียง';
+            }).catch((error) => {
+                console.log("กรุณากดเปิดเสียงด้วยตนเอง");
+            });
+        });
+
+        marker.addEventListener('markerLost', function() {
+            audio.pause();
+            audioBtn.innerHTML = '<span style="font-size: 18px;">🔇</span> เสียง';
+        });
+        // ===============================================
 
         function startAR() {
             document.getElementById('main-menu-ui').classList.add('hide');
@@ -224,6 +261,10 @@
             document.getElementById('main-menu-ui').classList.remove('hide');
             document.getElementById('close-ar-btn').style.display = 'none';
             document.getElementById('ar-controls').style.display = 'none';
+            
+            audio.pause();
+            audio.currentTime = 0; 
+            audioBtn.innerHTML = '<span style="font-size: 18px;">🔇</span> เสียง';
         }
 
         function rotateModel(degrees) {
