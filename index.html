@@ -12,14 +12,13 @@
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/DonMcCurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://raw.githack.com/fcor/arjs-gestures/master/dist/gestures.js"></script>
 
     <style>
         :root {
             --gold: #d4a843;
             --gold-light: #f0c96b;
             --deep: #1a0a00;
-            --crimson: #7a1a0a;
-            --ember: #c4400a;
         }
 
         *, *::before, *::after {
@@ -30,11 +29,11 @@
 
         body {
             font-family: 'Sarabun', sans-serif;
-            overflow: hidden; /* ป้องกันการเลื่อนหน้าจอ */
+            overflow: hidden; 
             background-color: #000;
         }
 
-        /* === หน้า UI เมนูหลัก (วางทับกล้องไว้ตอนแรก) === */
+        /* === UI เมนูหลัก === */
         #main-menu-ui {
             position: absolute;
             inset: 0;
@@ -47,13 +46,11 @@
             transition: opacity 0.5s ease;
         }
 
-        /* เมื่อกดเริ่ม AR ให้ซ่อนเมนู */
         #main-menu-ui.hide {
             opacity: 0;
             pointer-events: none;
         }
 
-        /* === ปุ่ม ปิด AR (จะโผล่มาตอนเปิดกล้อง) === */
         #close-ar-btn {
             position: fixed;
             top: 20px;
@@ -66,12 +63,12 @@
             border-radius: 50px;
             font-family: 'Sarabun', sans-serif;
             font-weight: 600;
-            display: none; /* ซ่อนไว้ก่อน */
+            display: none; 
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
-        /* นำ CSS ของ Card, ปุ่ม, และ Background Effect จากโค้ดเดิมมาใส่ไว้ตรงนี้ทั้งหมด */
+        /* ตกแต่ง UI */
         .bg-gradient { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(196, 64, 10, 0.25) 0%, transparent 70%), linear-gradient(180deg, #0d0400 0%, #1a0800 50%, #0d0200 100%); z-index: 0; }
         .particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
         .particle { position: absolute; border-radius: 50%; background: radial-gradient(circle, var(--gold-light), transparent 70%); animation: float-up linear infinite; opacity: 0; }
@@ -89,8 +86,6 @@
         .btn-wrapper { position: relative; width: 100%; }
         .btn { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 18px 24px; background: linear-gradient(135deg, #c4400a 0%, #7a1a0a 50%, #c4400a 100%); border: 1px solid rgba(212, 168, 67, 0.5); border-radius: 16px; color: var(--gold-light); font-family: 'Sarabun', sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
         .footer-note { margin-top: 20px; font-size: 11.5px; color: rgba(212, 168, 67, 0.35); letter-spacing: 0.1em; text-align: center; }
-
-        /* ซ่อนหน้าโหลดของ AR.js สีขาวๆ ที่น่ารำคาญ */
         .arjs-loader { display: none !important; } 
     </style>
 </head>
@@ -129,19 +124,31 @@
 
     <button id="close-ar-btn" onclick="stopAR()">❮ ปิดกล้อง</button>
 
-
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false;" 
+        vr-mode-ui="enabled: false"
+        gesture-detector>
         
         <a-assets>
             <a-asset-item id="ganesha-model" src="AR_MOVE4.glb"></a-asset-item>
         </a-assets>
 
-        <a-marker preset="hiro">
+        <a-marker 
+            preset="hiro" 
+            raycaster="objects: .clickable" 
+            emitevents="true" 
+            cursor="fuse: false; rayOrigin: mouse;" 
+            id="markerA">
+            
             <a-entity 
+                id="ganesha-entity"
                 gltf-model="#ganesha-model" 
                 scale="0.5 0.5 0.5" 
                 position="0 0 0" 
                 rotation="-90 0 0" 
+                class="clickable"
+                gesture-handler="minScale: 0.1; maxScale: 5"
                 animation-mixer>
             </a-entity>
         </a-marker>
@@ -150,7 +157,7 @@
     </a-scene>
 
     <script>
-        // สร้าง Particles สีทองลอยขึ้น
+        // Particles
         const particleContainer = document.getElementById('particles');
         for (let i = 0; i < 22; i++) {
             const p = document.createElement('div');
@@ -160,19 +167,13 @@
             particleContainer.appendChild(p);
         }
 
-        // ฟังก์ชันเมื่อกดเข้าโหมด AR
         function startAR() {
-            // ซ่อนเมนูหลัก ปล่อยให้เห็นกล้องวิดีโอ
             document.getElementById('main-menu-ui').classList.add('hide');
-            // โชว์ปุ่มกดปิด
             document.getElementById('close-ar-btn').style.display = 'block';
         }
 
-        // ฟังก์ชันเมื่อกด ปิดโหมด AR
         function stopAR() {
-            // เอาเมนูหลักกลับมาบังกล้อง
             document.getElementById('main-menu-ui').classList.remove('hide');
-            // ซ่อนปุ่ม
             document.getElementById('close-ar-btn').style.display = 'none';
         }
     </script>
