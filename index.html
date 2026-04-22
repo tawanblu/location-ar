@@ -14,117 +14,20 @@
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
 
     <style>
-        :root {
-            --gold: #d4a843;
-            --gold-light: #f0c96b;
-            --deep: #1a0a00;
-        }
+        :root { --gold: #d4a843; --gold-light: #f0c96b; --deep: #1a0a00; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Sarabun', sans-serif; overflow: hidden; background-color: #000; margin: 0; }
 
-        *, *::before, *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        #main-menu-ui { position: absolute; inset: 0; z-index: 999; background: var(--deep); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
+        #main-menu-ui.hide { opacity: 0; pointer-events: none; }
+        #close-ar-btn { position: fixed; top: 20px; left: 20px; z-index: 1000; background: rgba(26, 10, 0, 0.8); border: 1px solid var(--gold); color: var(--gold-light); padding: 10px 20px; border-radius: 50px; font-family: 'Sarabun', sans-serif; font-weight: 600; display: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
+        
+        #ar-controls { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: none; flex-wrap: wrap; justify-content: center; width: 90%; gap: 10px; }
+        .control-btn { background: rgba(26, 10, 0, 0.85); border: 1px solid var(--gold); color: var(--gold-light); padding: 10px 18px; border-radius: 12px; font-family: 'Sarabun', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+        .control-btn:active { background: var(--gold); color: var(--deep); transform: scale(0.95); }
+        
+        #ar-hint { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(212, 168, 67, 0.4); color: var(--gold-light); padding: 8px 16px; border-radius: 20px; font-family: 'Sarabun', sans-serif; font-size: 13px; white-space: nowrap; display: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
 
-        body {
-            font-family: 'Sarabun', sans-serif;
-            overflow: hidden;
-            background-color: #000;
-        }
-
-        /* === UI เมนูหลัก === */
-        #main-menu-ui {
-            position: absolute;
-            inset: 0;
-            z-index: 999;
-            background: var(--deep);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s ease;
-        }
-
-        #main-menu-ui.hide {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        #close-ar-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: rgba(26, 10, 0, 0.8);
-            border: 1px solid var(--gold);
-            color: var(--gold-light);
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-family: 'Sarabun', sans-serif;
-            font-weight: 600;
-            display: none;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        /* แผงปุ่มควบคุมด้านล่าง */
-        #ar-controls {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            display: none;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 90%;
-            gap: 10px;
-        }
-
-        .control-btn {
-            background: rgba(26, 10, 0, 0.85);
-            border: 1px solid var(--gold);
-            color: var(--gold-light);
-            padding: 10px 18px;
-            border-radius: 12px;
-            font-family: 'Sarabun', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .control-btn:active {
-            background: var(--gold);
-            color: var(--deep);
-            transform: scale(0.95);
-        }
-
-        /* 🌟 ข้อความแนะนำ 🌟 */
-        #ar-hint {
-            position: fixed;
-            bottom: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(212, 168, 67, 0.4);
-            color: var(--gold-light);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-family: 'Sarabun', sans-serif;
-            font-size: 13px;
-            white-space: nowrap;
-            display: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-        }
-
-        /* ตกแต่ง UI */
         .bg-gradient { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(196, 64, 10, 0.25) 0%, transparent 70%), linear-gradient(180deg, #0d0400 0%, #1a0800 50%, #0d0200 100%); z-index: 0; }
         .particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
         .particle { position: absolute; border-radius: 50%; background: radial-gradient(circle, var(--gold-light), transparent 70%); animation: float-up linear infinite; opacity: 0; }
@@ -142,8 +45,9 @@
         .btn { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 18px 24px; background: linear-gradient(135deg, #c4400a 0%, #7a1a0a 50%, #c4400a 100%); border: 1px solid rgba(212, 168, 67, 0.5); border-radius: 16px; color: var(--gold-light); font-family: 'Sarabun', sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
         .footer-note { margin-top: 20px; font-size: 11.5px; color: rgba(212, 168, 67, 0.35); letter-spacing: 0.1em; text-align: center; }
         
-        /* ซ่อนหน้าจอโหลดของ MindAR เพื่อใช้ UI ของเราเอง */
+        /* แก้ปัญหากล้องมีขอบขาว / ไม่เต็มจอ */
         .mindar-ui-overlay { display: none !important; }
+        video { object-fit: cover !important; }
     </style>
 </head>
 
@@ -200,7 +104,7 @@
     </div>
 
     <a-scene mindar-image="imageTargetSrc: targets001.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;" 
-             embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" 
+             color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" 
              vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
 
         <a-assets>
@@ -213,7 +117,7 @@
             
             <a-entity id="ganesha-entity" 
                       gltf-model="#ganesha-model" 
-                      scale="1 1 1" 
+                      scale="0.05 0.05 0.05" 
                       position="0 0 0"
                       rotation="0 0 0" 
                       animation-mixer>
@@ -223,7 +127,6 @@
     </a-scene>
 
     <script>
-        // สร้าง Particles (เอฟเฟกต์ฝุ่นทอง)
         const particleContainer = document.getElementById('particles');
         for (let i = 0; i < 22; i++) {
             const p = document.createElement('div');
@@ -233,7 +136,6 @@
             particleContainer.appendChild(p);
         }
 
-        // ================= ระบบจัดการ AR และเสียง =================
         const audio = document.getElementById('narration-audio');
         const audioBtn = document.getElementById('audio-btn');
         const marker = document.getElementById('markerA');
@@ -249,7 +151,6 @@
             }
         }
 
-        // เมื่อสแกนเจอภาพสถานที่จริง
         marker.addEventListener('targetFound', function () {
             audio.play().then(() => {
                 audioBtn.innerHTML = '<span style="font-size: 18px;">🔊</span> เสียง';
@@ -258,36 +159,30 @@
             });
         });
 
-        // เมื่อหลุดโฟกัสจากภาพ
         marker.addEventListener('targetLost', function () {
             audio.pause();
             audioBtn.innerHTML = '<span style="font-size: 18px;">🔇</span> เสียง';
         });
 
         function startAR() {
-            // ซ่อนเมนู แสดงปุ่มควบคุม
             document.getElementById('main-menu-ui').classList.add('hide');
             document.getElementById('close-ar-btn').style.display = 'block';
             document.getElementById('ar-controls').style.display = 'flex';
             document.getElementById('ar-hint').style.display = 'block'; 
             
-            // สั่งเปิดกล้องของ MindAR
             sceneEl.systems['mindar-image-system'].start();
         }
 
         function stopAR() {
-            // แสดงเมนู ซ่อนปุ่มควบคุม
             document.getElementById('main-menu-ui').classList.remove('hide');
             document.getElementById('close-ar-btn').style.display = 'none';
             document.getElementById('ar-controls').style.display = 'none';
             document.getElementById('ar-hint').style.display = 'none'; 
 
-            // ปิดเสียงและรีเซ็ต
             audio.pause();
             audio.currentTime = 0;
             audioBtn.innerHTML = '<span style="font-size: 18px;">🔇</span> เสียง';
             
-            // สั่งปิดกล้องของ MindAR
             sceneEl.systems['mindar-image-system'].stop();
         }
 
