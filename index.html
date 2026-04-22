@@ -352,6 +352,11 @@
 
         <a-marker type="pattern" url="001.patt" raycaster="objects: .clickable" emitevents="true"
             cursor="fuse: false; rayOrigin: mouse;" id="markerA">
+
+            <a-entity id="ganesha-entity" gltf-model="#ganesha-model" scale="1 1 1" position="0 0 0"
+                rotation="-90 -90 0" class="clickable" gesture-handler="minScale: 0.1; maxScale: 5" animation-mixer>
+            </a-entity>
+
         </a-marker>
 
         <a-entity camera></a-entity>
